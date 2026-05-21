@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Élan Fitness // Admin Core Operations</title>
+    
+    <!-- Google Fonts: Syne (Display) & Plus Jakarta Sans (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: #0c0c0c;
+            --bg-tertiary: #121212;
+            --accent-neon: #c6ff00;
+            --accent-neon-rgb: 198, 255, 0;
+            --accent-glow: rgba(198, 255, 0, 0.4);
+            --accent-glow-subtle: rgba(198, 255, 0, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #9a9a9a;
+            --text-muted: #505050;
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --glass-bg: rgba(12, 12, 12, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --glass-border-focus: rgba(198, 255, 0, 0.25);
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-fast: all 0.2s ease;
+            --sidebar-width: 280px;
+            --cursor-size: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        html, body {
+            min-height: 100%;
+            height: auto;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #222 var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #222;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-neon);
+        }
+
+        .custom-cursor {
+            width: var(--cursor-size);
+            height: var(--cursor-size);
+            background: var(--accent-neon);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+            display: none;
+        }
+
+        .custom-cursor-glow {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(198,255,0,0.08) 0%, rgba(198,255,0,0) 70%);
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+            display: none;
+        }
+
+        @media (pointer: fine) {
+            .custom-cursor, .custom-cursor-glow {
+                display: block;
+            }
+        }
+
+        .glow-ambient {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(200px);
+            opacity: 0.12;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(198, 255, 0, 0.3) 0%, rgba(198, 255, 0, 0) 70%);
+            top: -100px;
+            right: -100px;
+        }
+
+        .glow-ambient-2 {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.08;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(198, 255, 0, 0.25) 0%, rgba(198, 255, 0, 0) 70%);
+            bottom: -50px;
+            left: -50px;
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--glass-border);
+            padding: 2.5rem 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            flex-shrink: 0;
+            transition: var(--transition-smooth);
+            z-index: 100;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .logo-accent {
+            color: var(--accent-neon);
+        }
+
+        .menu-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .menu-item {
+            width: 100%;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: var(--transition-smooth);
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .menu-link i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+            transition: var(--transition-smooth);
+        }
+
+        .menu-link:hover, .menu-link.active {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+            border-color: var(--glass-border);
+        }
+
+        .menu-link.active {
+            border-color: var(--glass-border-focus);
+            background: rgba(198, 255, 0, 0.02);
+            color: var(--accent-neon);
+        }
+
+        .menu-link.active i, .menu-link:hover i {
+            color: var(--accent-neon);
+            filter: drop-shadow(0 0 5px var(--accent-glow));
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 1.5rem;
+        }
+
+        .main-workspace {
+            flex-grow: 1;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 0;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page-view {
+            display: none;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+        }
+
+        .page-view.active-page {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .header-title-box h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+
+        .header-title-box p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: var(--transition-smooth);
+        }
+
+        .menu-toggle:hover {
+            border-color: var(--accent-neon);
+            color: var(--accent-neon);
+        }
+
+        .btn-premium {
+            background: var(--accent-neon);
+            color: #000;
+            border: none;
+            padding: 0.85rem 1.75rem;
+            font-family: var(--font-body);
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: var(--transition-smooth);
+            box-shadow: 0 0 15px var(--accent-glow-subtle);
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--accent-glow);
+        }
+
+        .btn-border {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            padding: 0.85rem 1.75rem;
+            font-family: var(--font-body);
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-border:hover {
+            border-color: var(--accent-neon);
+            color: var(--accent-neon);
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+
+        .stat-card:hover {
+            border-color: var(--glass-border-focus);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 15px rgba(198,255,0,0.02);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(198,255,0,0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+        }
+
+        .stat-icon {
+            color: var(--accent-neon);
+            font-size: 1.2rem;
+            opacity: 0.8;
+            filter: drop-shadow(0 0 5px var(--accent-glow));
+        }
+
+        .stat-content {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 2.5vw, 2.2rem);
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .stat-trend {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .trend-up {
+            background: rgba(198, 255, 0, 0.1);
+            color: var(--accent-neon);
+        }
+
+        .trend-down {
+            background: rgba(255, 50, 50, 0.1);
+            color: #ff3232;
+        }
+
+        .analytics-section {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .chart-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: var(--transition-smooth);
+        }
+
+        .chart-card:hover {
+            border-color: var(--glass-border-focus);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .chart-title {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-toggles {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            padding: 3px;
+            border-radius: 10px;
+        }
+
+        .chart-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.4rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-transform: uppercase;
+        }
+
+        .chart-toggle-btn.active {
+            background: var(--accent-neon);
+            color: #000;
+        }
+
+        .chart-canvas-box {
+            position: relative;
+            width: 100%;
+            height: 220px;
+        }
+
+        .svg-chart {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .grid-line {
+            stroke: rgba(255, 255, 255, 0.03);
+            stroke-width: 1;
+        }
+
+        .chart-path-fill {
+            fill: url(#chart-gradient);
+            transition: d 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .chart-path-stroke {
+            fill: none;
+            stroke: var(--accent-neon);
+            stroke-width: 3;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+            transition: d 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .chart-dot {
+            fill: var(--accent-neon);
+            stroke: #000;
+            stroke-width: 3;
+            transition: cx 0.8s, cy 0.8s;
+            cursor: pointer;
+        }
+
+        .chart-dot:hover {
+            r: 7;
+        }
+
+        .health-radar-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: var(--transition-smooth);
+        }
+
+        .radar-stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+            margin-top: auto;
+        }
+
+        .radar-stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .radar-stat-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .radar-stat-name {
+            color: var(--text-secondary);
+        }
+
+        .radar-stat-value {
+            color: var(--accent-neon);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: var(--accent-neon);
+            box-shadow: 0 0 10px var(--accent-glow);
+            transition: width 1s ease-out;
+        }
+
+        .database-section {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: var(--transition-smooth);
+            width: 100%;
+        }
+
+        .database-section:hover {
+            border-color: var(--glass-border-focus);
+        }
+
+        .database-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 340px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-neon);
+            background: rgba(198, 255, 0, 0.02);
+            box-shadow: 0 0 15px rgba(198, 255, 0, 0.05);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.15rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .table-responsive-box {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.responsive-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        table.responsive-table th {
+            padding: 1rem 1.25rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        table.responsive-table td {
+            padding: 1.15rem 1.25rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+        }
+
+        table.responsive-table tr {
+            transition: var(--transition-smooth);
+        }
+
+        table.responsive-table tbody tr:hover {
+            background: rgba(255,255,255,0.01);
+        }
+
+        .athlete-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .athlete-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--glass-border);
+            background-color: var(--bg-tertiary);
+        }
+
+        .athlete-info h4 {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .athlete-info p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .biometric-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+        }
+
+        .badge-healthy {
+            background: rgba(198, 255, 0, 0.1);
+            color: var(--accent-neon);
+        }
+
+        .badge-performance {
+            background: rgba(0, 191, 255, 0.1);
+            color: #00bfff;
+        }
+
+        .badge-strain {
+            background: rgba(255, 50, 50, 0.1);
+            color: #ff3232;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 1rem;
+            transition: var(--transition-smooth);
+        }
+
+        .action-icon-btn:hover {
+            color: var(--accent-neon);
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .plan-card-managed {
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card-managed.highlighted {
+            border-color: var(--accent-neon);
+            box-shadow: 0 0 25px rgba(198, 255, 0, 0.05);
+        }
+
+        .plan-card-managed.highlighted::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(198, 255, 0, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .editable-field {
+            outline: none;
+            border: 1px dashed transparent;
+            transition: var(--transition-fast);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        .editable-field:focus {
+            border-color: var(--accent-neon);
+            background: rgba(198, 255, 0, 0.03);
+            color: #fff;
+        }
+
+        .plan-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .plan-header h3 {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .plan-price-box {
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+            margin-top: 1rem;
+        }
+
+        .plan-currency {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent-neon);
+        }
+
+        .plan-amount {
+            font-family: var(--font-display);
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .plan-period {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .plan-benefit-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1.5rem;
+        }
+
+        .plan-benefit-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .plan-benefit-list i {
+            color: var(--accent-neon);
+            font-size: 1rem;
+        }
+
+        .plan-card-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .workout-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .workout-card-premium {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition-smooth);
+        }
+
+        .workout-card-premium:hover {
+            border-color: var(--glass-border-focus);
+            transform: translateY(-4px);
+        }
+
+        .workout-video-box {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: #000;
+            overflow: hidden;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .workout-video-box iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-fallback-thumb {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            background: radial-gradient(circle at center, rgba(198, 255, 0, 0.02) 0%, transparent 70%);
+        }
+
+        .video-fallback-thumb i {
+            font-size: 2.5rem;
+            color: var(--accent-neon);
+            opacity: 0.4;
+        }
+
+        .workout-card-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .workout-card-body h4 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .workout-card-body p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            min-height: 45px;
+        }
+
+        .workout-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1rem;
+        }
+
+        .workout-badge-meta {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-neon);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .workout-duration {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition-smooth);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            max-width: 500px;
+            width: 100%;
+            border-radius: 28px;
+            padding: 2.5rem;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8), 0 0 40px rgba(198,255,0,0.05);
+            transform: translateY(30px) scale(0.95);
+            transition: var(--transition-smooth);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .modal-close-btn:hover {
+            color: var(--accent-neon);
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.9rem 1.15rem;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-neon);
+            background: rgba(198, 255, 0, 0.02);
+        }
+
+        .form-submit-btn {
+            background: var(--accent-neon);
+            color: #000;
+            border: none;
+            padding: 1.1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            margin-top: 1rem;
+        }
+
+        .form-submit-btn:hover {
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: calc(100vw - 4rem);
+        }
+
+        .toast-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--accent-neon);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: var(--text-primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(198,255,0,0.2);
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-box.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 290px;
+                height: 100vh;
+                box-shadow: 40px 0 80px rgba(0,0,0,0.8);
+                z-index: 2100;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                backdrop-filter: blur(5px);
+                z-index: 2050;
+                opacity: 0;
+                transition: var(--transition-smooth);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .analytics-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-workspace {
+                padding: 1.5rem 1rem;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            table.responsive-table thead {
+                display: none;
+            }
+
+            table.responsive-table tr {
+                display: block;
+                background: rgba(255,255,255,0.01);
+                border: 1px solid var(--glass-border);
+                border-radius: 16px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            table.responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.65rem 0;
+                border-bottom: 1px solid rgba(255,255,255,0.02);
+                font-size: 0.85rem;
+            }
+
+            table.responsive-table td:last-child {
+                border-bottom: none;
+            }
+
+            table.responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                font-size: 0.72rem;
+                letter-spacing: 0.05em;
+            }
+
+            table.responsive-table .athlete-profile {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .modal-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CUSTOM CURSOR -->
+    <div class="custom-cursor" id="cursor"></div>
+    <div class="custom-cursor-glow" id="cursor-glow"></div>
+
+    <!-- BACKGROUND LIGHTING -->
+    <div class="glow-ambient"></div>
+    <div class="glow-ambient-2"></div>
+
+    <!-- TOAST ALERTS -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- COLLAPSIBLE MOBILE OVERLAY -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR CONTAINER -->
+        <aside class="sidebar" id="sidebar">
+            <a href="index.html" class="logo-box">
+                <span class="logo-text">Élan <span class="logo-accent">Fitness</span></span>
+            </a>
+
+            <nav style="display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a class="menu-link active" data-page="dashboard">
+                            <i class="fa-solid fa-chart-line"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a class="menu-link" data-page="members">
+                            <i class="fa-solid fa-users"></i> Members
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a class="menu-link" data-page="plans">
+                            <i class="fa-solid fa-dumbbell"></i> Membership Plans
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a class="menu-link" data-page="workouts">
+                            <i class="fa-solid fa-circle-play"></i> Workouts
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="sidebar-footer">
+                    <a href="login.html" class="menu-link" style="color:#ff3232;">
+                        <i class="fa-solid fa-power-off"></i> Logout
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-workspace">
+            
+            <!-- VIEW 1: DASHBOARD -->
+            <section id="page-dashboard" class="page-view active-page">
+                <header class="dashboard-header">
+                    <div class="header-title-box">
+                        <h1 id="greeting-txt">Élan Fitness Admin Core</h1>
+                        <p id="dashboard-date">Premium membership and performance management dashboard</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- STATISTICS GRID -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Total Members</span>
+                            <i class="fa-solid fa-users-line stat-icon"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="total-athletes-val">284</span>
+                            <span class="stat-trend trend-up">
+                                <i class="fa-solid fa-arrow-trend-up"></i> +12%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Active Memberships</span>
+                            <i class="fa-solid fa-bolt stat-icon"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-value">98.4%</span>
+                            <span class="stat-trend trend-up">
+                                <i class="fa-solid fa-chart-simple"></i> Peak
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Monthly Revenue</span>
+                            <i class="fa-solid fa-droplet stat-icon"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-value">$142K</span>
+                            <span class="stat-trend trend-up">
+                                <i class="fa-solid fa-plus"></i> USD
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Expired Memberships</span>
+                            <i class="fa-solid fa-triangle-exclamation stat-icon" style="color:#ff3232;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-value" style="color:#ff3232;" id="strain-flag-val">2</span>
+                            <span class="stat-trend trend-down" style="background:rgba(255, 50, 50, 0.1);">
+                                Attention Required
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANALYTICS PANEL -->
+                <div class="analytics-section">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fa-solid fa-wave-square" style="color:var(--accent-neon)"></i> Weekly Gym Activity</h3>
+                            <div class="chart-toggles">
+                                <button class="chart-toggle-btn active" id="btn-weekly" onclick="switchTelemetry('weekly')">Weekly</button>
+                                <button class="chart-toggle-btn" id="btn-monthly" onclick="switchTelemetry('monthly')">Monthly</button>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-box">
+                            <svg class="svg-chart" id="telemetry-svg" viewBox="0 0 500 220" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="var(--accent-neon)" stop-opacity="0.3"></stop>
+                                        <stop offset="100%" stop-color="var(--accent-neon)" stop-opacity="0"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <line x1="0" y1="44" x2="500" y2="44" class="grid-line"></line>
+                                <line x1="0" y1="88" x2="500" y2="88" class="grid-line"></line>
+                                <line x1="0" y1="132" x2="500" y2="132" class="grid-line"></line>
+                                <line x1="0" y1="176" x2="500" y2="176" class="grid-line"></line>
+                                <path class="chart-path-fill" id="telemetry-fill" d=""></path>
+                                <path class="chart-path-stroke" id="telemetry-stroke" d=""></path>
+                                <g id="chart-dots-group"></g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="health-radar-card">
+                        <h3 class="chart-title"><i class="fa-solid fa-shield-halved" style="color:var(--accent-neon)"></i> Performance Metrics</h3>
+                        <div class="radar-stats-list">
+                            <div class="radar-stat-item">
+                                <div class="radar-stat-info">
+                                    <span class="radar-stat-name">Membership Retention</span>
+                                    <span class="radar-stat-value">92%</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" style="width: 92%;"></div>
+                                </div>
+                            </div>
+                            <div class="radar-stat-item">
+                                <div class="radar-stat-info">
+                                    <span class="radar-stat-name">Monthly Engagement</span>
+                                    <span class="radar-stat-value">85%</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" style="width: 85%;"></div>
+                                </div>
+                            </div>
+                            <div class="radar-stat-item">
+                                <div class="radar-stat-info">
+                                    <span class="radar-stat-name">Workout Consistency</span>
+                                    <span class="radar-stat-value">74%</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-fill" style="width: 74%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 2: MEMBERS DIRECTORY -->
+            <section id="page-members" class="page-view">
+                <header class="dashboard-header">
+                    <div class="header-title-box">
+                        <h1>Members Directory</h1>
+                        <p>Track, filter, and onboard athletic roster accounts</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <button class="btn-premium" onclick="openMemberModal()">
+                            <i class="fa-solid fa-plus"></i> Add New Member
+                        </button>
+                    </div>
+                </header>
+
+                <div class="database-section">
+                    <div class="database-header">
+                        <h3 class="chart-title"><i class="fa-solid fa-fingerprint" style="color:var(--accent-neon)"></i> Active Member Database</h3>
+                        <div class="search-container">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="athlete-search" class="search-input" placeholder="Search Members / Membership Plans..." oninput="filterAthletes()">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive-box">
+                        <table class="responsive-table">
+                            <thead>
+                                <tr>
+                                    <th>Member Profile</th>
+                                    <th>Membership Status</th>
+                                    <th>Membership Plan</th>
+                                    <th>Account Status</th>
+                                    <th>Member ID</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="athlete-table-body">
+                                <!-- Dynamic rendering -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 3: PLANS CREATOR -->
+            <section id="page-plans" class="page-view">
+                <header class="dashboard-header">
+                    <div class="header-title-box">
+                        <h1>Membership Plans</h1>
+                        <p>Formulate pricing structures and interactive system benefits</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <button class="btn-premium" onclick="addNewPlan()">
+                            <i class="fa-solid fa-plus"></i> Add New Plan
+                        </button>
+                        <button class="btn-border" onclick="savePlansToLocalStorage()">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        </button>
+                    </div>
+                </header>
+
+                <div class="plans-grid" id="plans-grid-container">
+                    <!-- Inline editable plans dynamically generated -->
+                </div>
+            </section>
+
+            <!-- VIEW 4: WORKOUTS MANAGER -->
+            <section id="page-workouts" class="page-view">
+                <header class="dashboard-header">
+                    <div class="header-title-box">
+                        <h1>Workout Management</h1>
+                        <p>Organize futuristic workout catalogs and embed live preview feeds</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <button class="btn-premium" onclick="openWorkoutModal()">
+                            <i class="fa-solid fa-plus"></i> Add Workout
+                        </button>
+                    </div>
+                </header>
+
+                <div class="workout-grid" id="workout-grid-container">
+                    <!-- Dynamic training modules rendered inline -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MEMBER ONBOARDING MODAL -->
+    <div class="modal-overlay" id="modal-overlay-member">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">ADD NEW MEMBER</h3>
+                <button class="modal-close-btn" onclick="closeMemberModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form class="modal-form" id="onboard-form" onsubmit="handleOnboard(event)">
+                <div class="form-group">
+                    <label for="athlete-name">Full Name</label>
+                    <input type="text" id="athlete-name" class="form-input" placeholder="e.g. Roman Sterling" required autocomplete="name">
+                </div>
+
+                <div class="form-group">
+                    <label for="athlete-email">Secure Member Email</label>
+                    <input type="email" id="athlete-email" class="form-input" placeholder="e.g. sterling@vector.io" required autocomplete="email">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="athlete-program">Membership Plan</label>
+                        <select id="athlete-program" class="form-input" style="background:#0c0c0c;" required>
+                            <option value="Élan Sovereign">Élan Sovereign</option>
+                            <option value="Élan Pro">Élan Pro</option>
+                            <option value="Basic Élan">Basic Élan</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="athlete-strain">Membership Status</label>
+                        <select id="athlete-strain" class="form-input" style="background:#0c0c0c;" required>
+                            <option value="Active">Active</option>
+                            <option value="VIP Elite">VIP Elite</option>
+                            <option value="Expired">Expired</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="form-submit-btn">CREATE MEMBER</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- WORKOUT CREATION MODAL -->
+    <div class="modal-overlay" id="modal-overlay-workout">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">ADD NEW WORKOUT</h3>
+                <button class="modal-close-btn" onclick="closeWorkoutModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form class="modal-form" id="workout-form" onsubmit="handleWorkoutOnboard(event)">
+                <div class="form-group">
+                    <label for="workout-name">Workout Name</label>
+                    <input type="text" id="workout-name" class="form-input" placeholder="e.g. Hypertrophy Pull Series" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="workout-desc">Description</label>
+                    <input type="text" id="workout-desc" class="form-input" placeholder="e.g. Focused shoulder and kinetic scapula chain pulls" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="workout-duration">Duration (mins)</label>
+                        <input type="number" id="workout-duration" class="form-input" placeholder="e.g. 45" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workout-diff">Difficulty Tier</label>
+                        <select id="workout-diff" class="form-input" style="background:#0c0c0c;" required>
+                            <option value="Elite">Elite</option>
+                            <option value="Advanced">Advanced</option>
+                            <option value="Intermediate">Intermediate</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="workout-video">Video Link / YouTube URL</label>
+                    <input type="url" id="workout-video" class="form-input" placeholder="e.g. https://www.youtube.com/embed/dQw4w9WgXcQ">
+                </div>
+
+                <button type="submit" class="form-submit-btn">CREATE WORKOUT</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* Cursor logic tracking */
+        const cursor = document.getElementById('cursor');
+        const cursorGlow = document.getElementById('cursor-glow');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            cursorGlow.animate({
+                left: `${e.clientX}px`,
+                top: `${e.clientY}px`
+            }, { duration: 400, fill: "forwards" });
+        });
+
+        function bindHoverEffects() {
+            const interactiveElements = document.querySelectorAll('a, button, input, select, tr, .editable-field');
+            interactiveElements.forEach(elem => {
+                elem.addEventListener('mouseenter', () => {
+                    cursor.style.width = '35px';
+                    cursor.style.height = '35px';
+                    cursor.style.backgroundColor = 'transparent';
+                    cursor.style.border = '2px solid var(--accent-neon)';
+                    cursor.style.mixBlendMode = 'normal';
+                });
+                elem.addEventListener('mouseleave', () => {
+                    cursor.style.width = 'var(--cursor-size)';
+                    cursor.style.height = 'var(--cursor-size)';
+                    cursor.style.backgroundColor = 'var(--accent-neon)';
+                    cursor.style.border = 'none';
+                    cursor.style.mixBlendMode = 'difference';
+                });
+            });
+        }
+
+        /* Dynamic SPA navigation view selectors */
+        const navLinks = document.querySelectorAll('.sidebar .menu-link[data-page]');
+        const pageViews = document.querySelectorAll('.page-view');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                const targetPage = link.getAttribute('data-page');
+                
+                navLinks.forEach(item => item.classList.remove('active'));
+                link.classList.add('active');
+
+                pageViews.forEach(view => {
+                    view.classList.remove('active-page');
+                });
+
+                const activeContainer = document.getElementById(`page-${targetPage}`);
+                if (activeContainer) {
+                    activeContainer.style.display = 'flex';
+                    // Force repaint
+                    activeContainer.offsetHeight;
+                    activeContainer.classList.add('active-page');
+                }
+
+                // Hide other containers completely after transition
+                pageViews.forEach(view => {
+                    if (view.id !== `page-${targetPage}`) {
+                        view.style.display = 'none';
+                    }
+                });
+
+                showToast(`Switched screen module to: ${targetPage.toUpperCase()}`);
+                if (window.innerWidth <= 1024) toggleSidebar();
+            });
+        });
+
+        /* Dynamic Clock system configurations */
+        function initSystemClock() {
+            const dateBox = document.getElementById('dashboard-date');
+            const greetingBox = document.getElementById('greeting-txt');
+            const today = new Date();
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            dateBox.textContent = `SYSTEM CLOCK: ${today.toLocaleDateString('en-US', options).toUpperCase()}`;
+
+            const hour = today.getHours();
+            if (hour < 12) greetingBox.innerHTML = `Morning Admin Center`;
+            else if (hour < 18) greetingBox.innerHTML = `Afternoon Operations`;
+            else greetingBox.innerHTML = `Evening Operations Update`;
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        /* Dynamic data matrices arrays */
+        let athletesList = [
+            {
+                id: "MBR-9082",
+                name: "Alexander Vance",
+                email: "vance.a@peaklabs.fit",
+                strain: "Active",
+                program: "Élan Sovereign",
+                status: "VERIFIED",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100"
+            },
+            {
+                id: "MBR-1142",
+                name: "Elizabeth Thorne",
+                email: "elizabeth.t@sovereign.io",
+                strain: "VIP Elite",
+                program: "Élan Pro",
+                status: "VERIFIED",
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100"
+            },
+            {
+                id: "MBR-4402",
+                name: "Damian Voss",
+                email: "damian.voss@quantum-vent.com",
+                strain: "Expired",
+                program: "Basic Élan",
+                status: "VERIFIED",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100"
+            },
+            {
+                id: "MBR-5192",
+                name: "Sarah Jenkins",
+                email: "sarah.j@metabolic.net",
+                strain: "Active",
+                program: "Élan Pro",
+                status: "VERIFIED",
+                avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100"
+            },
+            {
+                id: "MBR-3392",
+                name: "Marcus Sterling",
+                email: "marcus@sterling.io",
+                strain: "Expired",
+                program: "Élan Sovereign",
+                status: "VERIFIED",
+                avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=100"
+            }
+        ];
+
+        let plansList = [
+            {
+                id: "PLAN-1",
+                name: "Basic Élan",
+                price: "180",
+                highlighted: false,
+                features: [
+                    "Standard biological screening",
+                    "5 core dynamic training structures",
+                    "Premium digital water & calorie tools"
+                ]
+            },
+            {
+                id: "PLAN-2",
+                name: "Élan Pro",
+                price: "350",
+                highlighted: true,
+                features: [
+                    "Bi-weekly dynamic lipid screening",
+                    "Full continuous biological training",
+                    "Premium AI macronutrient calculators",
+                    "Bi-monthly direct coach consults"
+                ]
+            },
+            {
+                id: "PLAN-3",
+                name: "Élan Sovereign",
+                price: "750",
+                highlighted: false,
+                features: [
+                    "Weekly dynamic DNA biometrics",
+                    "Unlimited custom kinetic formulations",
+                    "AI neural system monitoring integration",
+                    "Direct daily coach & nutritionist access"
+                ]
+            }
+        ];
+
+        let workoutsList = [
+            {
+                id: "WRK-1092",
+                name: "Dynamic Kinetic Scapula Chain",
+                desc: "Focusing on joint space extension, micro-alignment and postural back pulls.",
+                duration: "45",
+                difficulty: "Elite",
+                videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            },
+            {
+                id: "WRK-3401",
+                name: "Hypertrophy Push Stimulus Sequence",
+                desc: "Sarcoplasmic volume optimization with controlled chest eccentric intervals.",
+                duration: "60",
+                difficulty: "Advanced",
+                videoUrl: ""
+            }
+        ];
+
+        function renderAthletesTable(data = athletesList) {
+            const body = document.getElementById('athlete-table-body');
+            body.innerHTML = '';
+
+            data.forEach(athlete => {
+                let badgeClass = 'badge-healthy';
+                if(athlete.strain === 'VIP Elite') badgeClass = 'badge-performance';
+                if(athlete.strain === 'Expired') badgeClass = 'badge-strain';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td data-label="Member Profile">
+                        <div class="athlete-profile">
+                            <img src="${athlete.avatar}" alt="${athlete.name}" class="athlete-avatar" onerror="this.src='https://placehold.co/100x100/121212/ffffff?text=${athlete.name[0]}'">
+                            <div class="athlete-info">
+                                <h4>${athlete.name}</h4>
+                                <p>${athlete.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-label="Membership Status">
+                        <span class="biometric-badge ${badgeClass}">
+                            <i class="fa-solid fa-heart-pulse"></i> ${athlete.strain}
+                        </span>
+                    </td>
+                    <td data-label="Membership Plan">${athlete.program}</td>
+                    <td data-label="Account Status">
+                        <span style="color:var(--accent-neon); font-weight:700; font-size:0.8rem; letter-spacing:0.05em;">
+                            <i class="fa-solid fa-circle-nodes"></i> ${athlete.status}
+                        </span>
+                    </td>
+                    <td data-label="Member ID" style="font-family:monospace; color:var(--text-secondary);">${athlete.id}</td>
+                    <td data-label="Action">
+                        <button class="action-icon-btn" onclick="terminateAthlete('${athlete.id}')" aria-label="Remove Member">
+                            <i class="fa-solid fa-unlink"></i>
+                        </button>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
+
+            document.getElementById('total-athletes-val').textContent = athletesList.length + 279;
+            const expiredCount = athletesList.filter(a => a.strain === 'Expired').length;
+            document.getElementById('strain-flag-val').textContent = expiredCount;
+            bindHoverEffects();
+        }
+
+        function filterAthletes() {
+            const query = document.getElementById('athlete-search').value.toLowerCase().trim();
+            const filtered = athletesList.filter(a => 
+                a.name.toLowerCase().includes(query) || 
+                a.id.toLowerCase().includes(query) || 
+                a.program.toLowerCase().includes(query)
+            );
+            renderAthletesTable(filtered);
+        }
+
+        /* Member modal onboarding actions */
+        function openMemberModal() {
+            document.getElementById('modal-overlay-member').classList.add('active');
+        }
+
+        function closeMemberModal() {
+            document.getElementById('modal-overlay-member').classList.remove('active');
+        }
+
+        function handleOnboard(e) {
+            e.preventDefault();
+            const name = document.getElementById('athlete-name').value.trim();
+            const email = document.getElementById('athlete-email').value.trim();
+            const program = document.getElementById('athlete-program').value;
+            const strain = document.getElementById('athlete-strain').value;
+
+            const newAthlete = {
+                id: `MBR-${Math.floor(Math.random() * 9000) + 1000}`,
+                name: name,
+                email: email,
+                strain: strain,
+                program: program,
+                status: "VERIFIED",
+                avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 900000)}?q=80&w=100`
+            };
+
+            athletesList.unshift(newAthlete);
+            renderAthletesTable();
+            closeMemberModal();
+            document.getElementById('onboard-form').reset();
+            showToast(`Member onboarded successfully: ${name.toUpperCase()}`);
+        }
+
+        function terminateAthlete(id) {
+            athletesList = athletesList.filter(athlete => athlete.id !== id);
+            renderAthletesTable();
+            showToast(`Member removed: ${id}`);
+        }
+
+        /* Plans generation rendering pipeline */
+        function renderMembershipPlans() {
+            const container = document.getElementById('plans-grid-container');
+            container.innerHTML = '';
+
+            plansList.forEach((plan, index) => {
+                const planCard = document.createElement('div');
+                planCard.className = `plan-card-managed ${plan.highlighted ? 'highlighted' : ''}`;
+                planCard.innerHTML = `
+                    <div class="plan-header">
+                        <h3 contenteditable="true" class="editable-field plan-name-input" data-index="${index}">${plan.name}</h3>
+                        <div class="plan-price-box">
+                            <span class="plan-currency">$</span>
+                            <span contenteditable="true" class="editable-field plan-price-input plan-amount" data-index="${index}">${plan.price}</span>
+                            <span class="plan-period">/ month</span>
+                        </div>
+                    </div>
+                    <ul class="plan-benefit-list">
+                        ${plan.features.map((feature, featureIdx) => `
+                            <li>
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span contenteditable="true" class="editable-field plan-feature-input" data-index="${index}" data-feature-idx="${featureIdx}">${feature}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="plan-card-actions">
+                        <button class="btn-border" style="padding: 0.6rem 1.2rem; font-size: 0.75rem;" onclick="removePlan(${index})">
+                            <i class="fa-solid fa-trash-can"></i> Remove
+                        </button>
+                        <button class="btn-border" style="padding: 0.6rem 1.2rem; font-size: 0.75rem; color: var(--accent-neon); border-color: var(--glass-border-focus);" onclick="togglePlanHighlight(${index})">
+                            <i class="fa-solid fa-star"></i> Feature
+                        </button>
+                    </div>
+                `;
+                container.appendChild(planCard);
+            });
+
+            // Bind update listeners to save inputs in real-time
+            document.querySelectorAll('.plan-name-input').forEach(el => {
+                el.addEventListener('blur', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    plansList[idx].name = e.target.innerText.trim();
+                });
+            });
+
+            document.querySelectorAll('.plan-price-input').forEach(el => {
+                el.addEventListener('blur', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    plansList[idx].price = e.target.innerText.trim();
+                });
+            });
+
+            document.querySelectorAll('.plan-feature-input').forEach(el => {
+                el.addEventListener('blur', (e) => {
+                    const idx = e.target.getAttribute('data-index');
+                    const featIdx = e.target.getAttribute('data-feature-idx');
+                    plansList[idx].features[featIdx] = e.target.innerText.trim();
+                });
+            });
+
+            bindHoverEffects();
+        }
+
+        function addNewPlan() {
+            const newPlan = {
+                id: `PLAN-${Date.now()}`,
+                name: "New Tier Plan",
+                price: "290",
+                highlighted: false,
+                features: [
+                    "Bespoke biological analysis",
+                    "Custom macro engine sync"
+                ]
+            };
+            plansList.push(newPlan);
+            renderMembershipPlans();
+            showToast("Added new customized tier plan");
+        }
+
+        function removePlan(index) {
+            plansList.splice(index, 1);
+            renderMembershipPlans();
+            showToast("Plan deleted successfully");
+        }
+
+        function togglePlanHighlight(index) {
+            plansList.forEach((plan, idx) => {
+                plan.highlighted = (idx === index);
+            });
+            renderMembershipPlans();
+            showToast(`Featured selection: ${plansList[index].name.toUpperCase()}`);
+        }
+
+        function savePlansToLocalStorage() {
+            showToast("All customized plans saved successfully!");
+        }
+
+        /* Workout management visual catalog builders */
+        function renderWorkouts() {
+            const container = document.getElementById('workout-grid-container');
+            container.innerHTML = '';
+
+            workoutsList.forEach((workout, index) => {
+                const videoIframe = workout.videoUrl 
+                    ? `<iframe src="${workout.videoUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+                    : `<div class="video-fallback-thumb">
+                        <i class="fa-solid fa-video-slash"></i>
+                        <span>No Video Feed Provided</span>
+                       </div>`;
+
+                const card = document.createElement('div');
+                card.className = "workout-card-premium";
+                card.innerHTML = `
+                    <div class="workout-video-box">
+                        ${videoIframe}
+                    </div>
+                    <div class="workout-card-body">
+                        <h4>${workout.name}</h4>
+                        <p>${workout.desc}</p>
+                        <div class="workout-meta-row">
+                            <span class="workout-badge-meta">${workout.difficulty}</span>
+                            <span class="workout-duration">
+                                <i class="fa-regular fa-clock"></i> ${workout.duration} Mins
+                            </span>
+                        </div>
+                        <button class="btn-border" style="width: 100%; justify-content: center; font-size: 0.75rem; margin-top: 0.5rem;" onclick="removeWorkout(${index})">
+                            <i class="fa-solid fa-trash-can"></i> Remove Workout
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            bindHoverEffects();
+        }
+
+        function openWorkoutModal() {
+            document.getElementById('modal-overlay-workout').classList.add('active');
+        }
+
+        function closeWorkoutModal() {
+            document.getElementById('modal-overlay-workout').classList.remove('active');
+        }
+
+        function handleWorkoutOnboard(e) {
+            e.preventDefault();
+            const name = document.getElementById('workout-name').value.trim();
+            const desc = document.getElementById('workout-desc').value.trim();
+            const duration = document.getElementById('workout-duration').value;
+            const difficulty = document.getElementById('workout-diff').value;
+            let videoUrl = document.getElementById('workout-video').value.trim();
+
+            if (videoUrl && !videoUrl.includes('embed')) {
+                // Quick URL parser fallback
+                if (videoUrl.includes('youtube.com/watch?v=')) {
+                    const videoId = videoUrl.split('v=')[1]?.split('&')[0];
+                    if (videoId) videoUrl = `https://www.youtube.com/embed/${videoId}`;
+                } else if (videoUrl.includes('youtu.be/')) {
+                    const videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
+                    if (videoId) videoUrl = `https://www.youtube.com/embed/${videoId}`;
+                }
+            }
+
+            const newWorkout = {
+                id: `WRK-${Date.now()}`,
+                name,
+                desc,
+                duration,
+                difficulty,
+                videoUrl
+            };
+
+            workoutsList.push(newWorkout);
+            renderWorkouts();
+            closeWorkoutModal();
+            document.getElementById('workout-form').reset();
+            showToast(`Added Workout Routine: ${name.toUpperCase()}`);
+        }
+
+        function removeWorkout(index) {
+            workoutsList.splice(index, 1);
+            renderWorkouts();
+            showToast("Workout deleted successfully");
+        }
+
+        /* Visual graph calculation systems */
+        const telemetryDatasets = {
+            weekly: [
+                { x: 20, y: 140 },
+                { x: 100, y: 120 },
+                { x: 180, y: 160 },
+                { x: 260, y: 80 },
+                { x: 340, y: 110 },
+                { x: 420, y: 60 },
+                { x: 480, y: 90 }
+            ],
+            monthly: [
+                { x: 20, y: 170 },
+                { x: 100, y: 150 },
+                { x: 180, y: 100 },
+                { x: 260, y: 130 },
+                { x: 340, y: 90 },
+                { x: 420, y: 50 },
+                { x: 480, y: 70 }
+            ]
+        };
+
+        function drawTelemetryChart(points) {
+            const strokePath = document.getElementById('telemetry-stroke');
+            const fillPath = document.getElementById('telemetry-fill');
+            const dotsGroup = document.getElementById('chart-dots-group');
+
+            let strokeD = `M ${points[0].x} ${points[0].y}`;
+            for (let i = 1; i < points.length; i++) {
+                strokeD += ` L ${points[i].x} ${points[i].y}`;
+            }
+
+            const fillD = `${strokeD} L ${points[points.length - 1].x} 220 L ${points[0].x} 220 Z`;
+
+            strokePath.setAttribute('d', strokeD);
+            fillPath.setAttribute('d', fillD);
+
+            dotsGroup.innerHTML = '';
+            points.forEach((pt) => {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute('class', 'chart-dot');
+                circle.setAttribute('cx', pt.x);
+                circle.setAttribute('cy', pt.y);
+                circle.setAttribute('r', '5');
+                circle.addEventListener('mouseenter', () => {
+                    showToast(`Active Visitors: ${Math.floor(220 - pt.y)} members`);
+                });
+                dotsGroup.appendChild(circle);
+            });
+        }
+
+        function switchTelemetry(mode) {
+            document.getElementById('btn-weekly').classList.remove('active');
+            document.getElementById('btn-monthly').classList.remove('active');
+            
+            if(mode === 'weekly') {
+                document.getElementById('btn-weekly').classList.add('active');
+                drawTelemetryChart(telemetryDatasets.weekly);
+            } else {
+                document.getElementById('btn-monthly').classList.add('active');
+                drawTelemetryChart(telemetryDatasets.monthly);
+            }
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-box';
+            toast.innerHTML = `<i class="fa-solid fa-circle-nodes" style="color:var(--accent-neon)"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 455);
+            }, 3000);
+        }
+
+        window.onload = function() {
+            initSystemClock();
+            renderAthletesTable();
+            renderMembershipPlans();
+            renderWorkouts();
+            drawTelemetryChart(telemetryDatasets.weekly);
+        }
+    </script>
+</body>
+</html>
