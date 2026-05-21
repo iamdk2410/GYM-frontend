@@ -418,13 +418,19 @@
         }
 
         @media (max-width: 1024px) {
-            .nav-links, .nav-actions .login-btn {
-                display: none;
-            }
-            .hamburger {
-                display: flex;
-            }
-        }
+    .nav-links,
+    .nav-actions > .login-btn {
+        display: none;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .mobile-menu .login-btn {
+        display: block;
+    }
+}
 
         /* HERO SECTION - REBUILT IN EDITORIAL POSTER COMPOSITION */
         .hero {
