@@ -2727,8 +2727,18 @@
             </div>
         </div>
     </footer>
+<script>
+const hamburger = document.getElementById("hamburger");
+const mobileMenu = document.getElementById("mobile-menu");
 
+function toggleMenu() {
+    mobileMenu.classList.toggle("active");
+}
+
+hamburger.addEventListener("click", toggleMenu);
+</script>
     <script>
+        
         /* Interactive Custom Cursor Logic & Dynamic Parallax Updates */
         const cursor = document.getElementById('cursor');
         const cursorGlow = document.getElementById('cursor-glow');
